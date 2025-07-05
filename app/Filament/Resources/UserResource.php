@@ -60,6 +60,7 @@ class UserResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('fcm_token'),    
             ])
             ->filters([
                 //
