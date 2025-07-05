@@ -15,7 +15,6 @@ class OrderController extends Controller
     {
         $user = $request->user();
         $orders = Orden::where('technician_id', $user->id)
-            ->with('client') // Carga la relación con el cliente
             ->latest()
             ->get();
 
