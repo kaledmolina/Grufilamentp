@@ -12,12 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->cors(
-            paths: ['api/*'], // Asegúrate que apunte a tus rutas de API
-            allowed_origins: ['*'], // Permite cualquier origen para desarrollo
-            allowed_headers: ['*'],
-            allowed_methods: ['*'],
-        );
+       
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
