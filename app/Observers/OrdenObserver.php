@@ -4,26 +4,25 @@ namespace App\Observers;
 
 use App\Models\Orden;
 use App\Models\User;
-use App\Notifications\OrderAssignedNotification;
-use Illuminate\Support\Facades\Log; // <-- Asegúrate que esto esté importado
+use App\Services\FcmService; // <-- Importante que use el servicio
 
 class OrdenObserver
 {
     public function updated(Orden $orden): void
     {
-        // Solo se ejecuta si el campo 'technician_id' fue modificado
+        // Si el técnico fue asignado o cambiado...
         if ($orden->isDirty('technician_id') && !is_null($orden->technician_id)) {
-
-            Log::info("✅ Observer de Orden activado para la orden #{$orden->id}.");
-
+            
             $tecnico = User::find($orden->technician_id);
 
+            // ...y si el técnico existe y tiene un token guardado.
             if ($tecnico && $tecnico->fcm_token) {
-                Log::info("✅ Técnico #{$tecnico->id} encontrado con token. Intentando notificar...");
-                $tecnico->notify(new OrderAssignedNotification($orden));
-                Log::info("✅ Notificación para la orden #{$orden->id} enviada a la cola.");
-            } else {
-                Log::error("❌ ERROR: No se pudo notificar. Técnico no encontrado o no tiene token FCM.");
+                $title = '¡Nueva Orden Asignada!';
+                $body = "Se te ha asignado la orden #{$orden->id}.";
+                $data = ['order_id' => (string)$orden->id];
+
+                // Usa el servicio para enviar la notificación
+                (new FcmService())->send($tecnico->fcm_token, $title, $body, $data);
             }
         }
     }
