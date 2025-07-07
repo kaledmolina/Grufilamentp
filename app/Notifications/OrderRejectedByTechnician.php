@@ -1,9 +1,10 @@
-<?php
-namespace App\Notifications;
+<?phpnamespace App\Notifications;
 
 use App\Models\Orden;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+// 👇 ESTA ES LA LÍNEA MÁS IMPORTANTE Y LA CORRECCIÓN
+use Illuminate\Notifications\Notification;
 use Filament\Notifications\Notification as FilamentNotification;
 
 class OrderRejectedByTechnician extends Notification
@@ -24,7 +25,7 @@ class OrderRejectedByTechnician extends Notification
         return ['database'];
     }
 
-    // 👇 MÉTODO ACTUALIZADO PARA FORMATEAR LA NOTIFICACIÓN PARA FILAMENT
+    // MÉTODO ACTUALIZADO PARA FORMATEAR LA NOTIFICACIÓN PARA FILAMENT
     public function toDatabase(object $notifiable): array
     {
         return FilamentNotification::make()
