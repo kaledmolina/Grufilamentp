@@ -1,4 +1,5 @@
-<?phpnamespace App\Notifications;
+<?php
+namespace App\Notifications;
 
 use App\Models\Orden;
 use App\Models\User;
