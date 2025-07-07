@@ -25,6 +25,10 @@ class User extends Authenticatable
         'email',
         'password',
         'fcm_token',
+        'telefono', // <-- Añadido
+        'direccion',// <-- Añadido
+        'vehiculo', // <-- Añadido
+        'is_active',
     ];
 
     /**
@@ -47,6 +51,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
     public function routeNotificationForFcm($notification = null)
