@@ -17,17 +17,14 @@ Route::get('/v1/health', function () {
 
 // --- Rutas Protegidas v1 ---
 // Todas las rutas dentro de este grupo requieren un token de autenticación válido.
+// --- Rutas Protegidas v1 ---
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
-    
-    // Rutas de Autenticación
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    
-    // Ruta para actualizar el token de notificaciones del dispositivo.
     Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
 
     // Rutas para las Órdenes
     Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{orden}', [OrderController::class, 'show']); // <-- RUTA NUEVA
     Route::post('/orders/{orden}/accept', [OrderController::class, 'acceptOrder']);
-
 });

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
@@ -22,6 +21,21 @@ class OrderController extends Controller
     }
 
     /**
+     * Muestra los detalles de una orden específica.
+     */
+    public function show(Request $request, Orden $orden)
+    {
+        // Verifica que el técnico que solicita la orden sea el mismo que la tiene asignada.
+        if ($request->user()->id !== $orden->technician_id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        // Devolvemos la orden con todos sus detalles.
+        return response()->json($orden);
+    }
+
+
+    /**
      * Permite al técnico "tomar" una orden, cambiando su estado.
      */
     public function acceptOrder(Request $request, Orden $orden)
@@ -33,8 +47,17 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado para modificar esta orden.'], 403);
         }
 
+        // NUEVA VALIDACIÓN: Verificar si el técnico ya tiene una orden "en proceso".
+        $hasActiveOrder = Orden::where('technician_id', $user->id)
+                                ->where('status', 'en proceso')
+                                ->exists();
+
+        if ($hasActiveOrder) {
+            return response()->json(['message' => 'Ya tienes una orden en proceso. Debes completarla antes de tomar otra.'], 422);
+        }
+
         // Verificar que la orden esté en un estado que se pueda aceptar
-        if (!in_array($orden->status, ['abierta', 'programada'])) {
+        if ($orden->status !== 'abierta') {
             return response()->json(['message' => 'Esta orden ya no se puede procesar.'], 422);
         }
 
