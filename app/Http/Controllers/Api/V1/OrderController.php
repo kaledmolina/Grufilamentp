@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Orden;
 use App\Models\User;
 use Illuminate\Http\Request;
+// 👇 Importa la clase de Notificación de Filament
 use Filament\Notifications\Notification as FilamentNotification;
+// 👇 CORRECCIÓN: Importa la clase de Acción para las notificaciones
+use Filament\Notifications\Actions\Action;
 
 class OrderController extends Controller
 {
@@ -132,7 +135,8 @@ class OrderController extends Controller
             ->icon('heroicon-o-exclamation-triangle')
             ->body("El técnico {$user->name} ha rechazado la orden #{$orden->numero_orden}. Se requiere reasignación.")
             ->actions([
-                FilamentNotification\Actions\Action::make('view')
+                // CORRECCIÓN: Se usa la clase Action importada correctamente.
+                Action::make('view')
                     ->label('Ver Orden')
                     ->url(route('filament.admin.resources.ordens.edit', ['record' => $orden])),
             ])
