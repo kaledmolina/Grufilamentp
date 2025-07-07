@@ -92,4 +92,29 @@ class OrderController extends Controller
             'order' => $orden
         ]);
     }
+    public function rejectOrder(Request $request, Orden $orden)
+    {
+        $user = $request->user();
+
+        // Verificar que la orden le pertenece al técnico
+        if ($orden->technician_id !== $user->id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        // Verificar que la orden esté en estado 'abierta'
+        if ($orden->status !== 'abierta') {
+            return response()->json(['message' => 'Esta orden ya no se puede rechazar.'], 422);
+        }
+
+        // Actualiza la orden: estado a 'rechazada' y quita al técnico.
+        $orden->status = 'rechazada';
+        $orden->technician_id = null; // <-- MUY IMPORTANTE
+        $orden->save();
+
+        // Notificar a todos los administradores y operadores
+        $adminsAndOperators = User::role(['administrador', 'operador'])->get();
+        Notification::send($adminsAndOperators, new OrderRejectedByTechnician($orden, $user));
+
+        return response()->json(['message' => 'Orden rechazada correctamente.']);
+    }
 }

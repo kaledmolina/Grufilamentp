@@ -28,4 +28,5 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('/orders/{orden}', [OrderController::class, 'show']);
     Route::post('/orders/{orden}/accept', [OrderController::class, 'acceptOrder']);
     Route::post('/orders/{orden}/close', [OrderController::class, 'closeOrder']);
+    Route::post('/orders/{orden}/reject', [OrderController::class, 'rejectOrder']);
 });
