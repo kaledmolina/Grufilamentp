@@ -1,13 +1,11 @@
 <?php
-
 namespace App\Notifications;
 
 use App\Models\Orden;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Filament\Notifications\Notification as FilamentNotification;
 
 class OrderRejectedByTechnician extends Notification
 {
@@ -24,18 +22,21 @@ class OrderRejectedByTechnician extends Notification
 
     public function via(object $notifiable): array
     {
-        // Esta notificación se guardará en la base de datos.
         return ['database'];
     }
 
-    // Define cómo se almacenará la notificación en la base de datos.
+    // 👇 MÉTODO ACTUALIZADO PARA FORMATEAR LA NOTIFICACIÓN PARA FILAMENT
     public function toDatabase(object $notifiable): array
     {
-        return [
-            'order_id' => $this->orden->id,
-            'order_number' => $this->orden->numero_orden,
-            'technician_name' => $this->technician->name,
-            'message' => "El técnico {$this->technician->name} ha rechazado la orden #{$this->orden->numero_orden}. Se requiere reasignación.",
-        ];
+        return FilamentNotification::make()
+            ->title('Orden Rechazada')
+            ->icon('heroicon-o-exclamation-triangle')
+            ->body("El técnico {$this->technician->name} ha rechazado la orden #{$this->orden->numero_orden}. Se requiere reasignación.")
+            ->actions([
+                FilamentNotification\Actions\Action::make('view')
+                    ->label('Ver Orden')
+                    ->url(route('filament.admin.resources.ordens.edit', ['record' => $this->orden])),
+            ])
+            ->getDatabaseMessage();
     }
 }
