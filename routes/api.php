@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 
     // Rutas para las Órdenes
     Route::get('/orders', [OrderController::class, 'index']);
-    Route::get('/orders/{orden}', [OrderController::class, 'show']); // <-- RUTA NUEVA
+    Route::get('/orders/{orden}', [OrderController::class, 'show']);
     Route::post('/orders/{orden}/accept', [OrderController::class, 'acceptOrder']);
+    Route::post('/orders/{orden}/close', [OrderController::class, 'closeOrder']);
 });

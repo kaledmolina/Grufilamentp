@@ -69,4 +69,27 @@ class OrderController extends Controller
             'order' => $orden
         ]);
     }
+
+    public function closeOrder(Request $request, Orden $orden)
+    {
+        $user = $request->user();
+
+        // Verificar que la orden le pertenece al técnico
+        if ($orden->technician_id !== $user->id) {
+            return response()->json(['message' => 'No autorizado para modificar esta orden.'], 403);
+        }
+
+        // Verificar que la orden esté "en proceso" para poder cerrarla
+        if ($orden->status !== 'en proceso') {
+            return response()->json(['message' => 'Esta orden no se puede cerrar en su estado actual.'], 422);
+        }
+
+        $orden->status = 'cerrada';
+        $orden->save();
+
+        return response()->json([
+            'message' => 'Orden cerrada exitosamente.',
+            'order' => $orden
+        ]);
+    }
 }
