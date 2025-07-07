@@ -4,7 +4,6 @@ namespace App\Notifications;
 use App\Models\Orden;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
 use Filament\Notifications\Notification as FilamentNotification;
 
 class OrderRejectedByTechnician extends Notification
