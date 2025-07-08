@@ -31,4 +31,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/orders/{orden}/reject', [OrderController::class, 'rejectOrder']);
     //Rutas para usuario
     Route::get('/me', [AuthController::class, 'me']);
+    //Rutas para fotos
+    Route::post('/orders/{orden}/update-details', [OrderController::class, 'updateDetails']); 
+    Route::post('/orders/{orden}/upload-photo', [OrderController::class, 'uploadPhoto']);   
+
 });

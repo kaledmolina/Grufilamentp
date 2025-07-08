@@ -141,4 +141,38 @@ class OrderController extends Controller
         
         return response()->json(['message' => 'Orden rechazada correctamente.']);
     }
+    public function updateDetails(Request $request, Orden $orden)
+    {
+        // Validación de los datos de entrada
+        $validatedData = $request->validate([
+            'celular' => 'nullable|string|max:20',
+            'observaciones_origen' => 'nullable|string',
+            'observaciones_destino' => 'nullable|string',
+        ]);
+
+        $orden->update($validatedData);
+
+        return response()->json([
+            'message' => 'Detalles de la orden actualizados.',
+            'order' => $orden,
+        ]);
+    }
+
+    /**
+     * Sube una foto para una orden específica.
+     */
+    public function uploadPhoto(Request $request, Orden $orden)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        // Guarda la foto en el disco 'local' (privado) y obtiene la ruta
+        $path = $request->file('photo')->store('private/orden-fotos', 'local');
+
+        // Crea el registro en la base de datos
+        $orden->fotos()->create(['path' => $path]);
+
+        return response()->json(['message' => 'Foto subida exitosamente.']);
+    }
 }
