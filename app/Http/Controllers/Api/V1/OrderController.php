@@ -175,4 +175,14 @@ class OrderController extends Controller
 
         return response()->json(['message' => 'Foto subida exitosamente.']);
     }
+
+    public function getPhotos(Request $request, Orden $orden)
+    {
+        // Opcional: Verificación de autorización
+        if ($request->user()->id !== $orden->technician_id) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        return response()->json($orden->fotos);
+    }
 }

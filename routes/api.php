@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     //Rutas para fotos
     Route::post('/orders/{orden}/update-details', [OrderController::class, 'updateDetails']); 
-    Route::post('/orders/{orden}/upload-photo', [OrderController::class, 'uploadPhoto']);   
+    Route::post('/orders/{orden}/upload-photo', [OrderController::class, 'uploadPhoto']);
+    Route::get('/orders/{orden}/photos', [OrderController::class, 'getPhotos']);   
 
 });
