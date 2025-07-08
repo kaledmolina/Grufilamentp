@@ -51,4 +51,9 @@ class Orden extends Model
     {
         return $this->belongsTo(User::class, 'technician_id');
     }
+
+    public function fotos()
+    {
+        return $this->hasMany(OrdenFoto::class);
+    }
 }
