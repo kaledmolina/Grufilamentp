@@ -17,9 +17,17 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $orders = Orden::where('technician_id', $user->id)
-            ->latest()
-            ->get();
+        
+        // Empezamos la consulta
+        $query = Orden::where('technician_id', $user->id);
+
+        // Aplicamos el filtro de estado si viene en la petición
+        if ($request->has('status') && $request->status !== 'todas') {
+            $query->where('status', $request->status);
+        }
+
+        // Ordenamos por la más reciente y paginamos los resultados
+        $orders = $query->latest()->paginate(15); // Muestra 15 órdenes por página
 
         return response()->json($orders);
     }

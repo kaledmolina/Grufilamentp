@@ -29,4 +29,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/orders/{orden}/accept', [OrderController::class, 'acceptOrder']);
     Route::post('/orders/{orden}/close', [OrderController::class, 'closeOrder']);
     Route::post('/orders/{orden}/reject', [OrderController::class, 'rejectOrder']);
+    //Rutas para usuario
+    Route::get('/me', [AuthController::class, 'me']);
 });
