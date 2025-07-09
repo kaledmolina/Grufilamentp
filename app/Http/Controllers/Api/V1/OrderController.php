@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Orden;
 use App\Models\User;
+use App\Models\OrdenFoto;
 use Illuminate\Http\Request;
 use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Notifications\Actions\Action;
