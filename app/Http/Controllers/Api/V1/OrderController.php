@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Notifications\Actions\Action;
+use App\Http\Resources\OrdenFotoResource;
 
 class OrderController extends Controller
 {
@@ -185,7 +186,8 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        return response()->json($orden->fotos);
+        // CAMBIO: En lugar de devolver la colección directamente, la pasamos a través del Resource.
+        return OrdenFotoResource::collection($orden->fotos);
     }
     public function showPhoto(Request $request, OrdenFoto $ordenFoto)
     {
