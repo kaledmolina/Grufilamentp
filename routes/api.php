@@ -34,6 +34,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //Rutas para fotos
     Route::post('/orders/{orden}/update-details', [OrderController::class, 'updateDetails']); 
     Route::post('/orders/{orden}/upload-photo', [OrderController::class, 'uploadPhoto']);
-    Route::get('/orders/{orden}/photos', [OrderController::class, 'getPhotos']);   
+    Route::get('/orders/{orden}/photos', [OrderController::class, 'getPhotos']);
+    Route::get('/private-fotos/{ordenFoto}', [OrderController::class, 'showPhoto'])->name('fotos.show');
 
 });

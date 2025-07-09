@@ -185,4 +185,20 @@ class OrderController extends Controller
 
         return response()->json($orden->fotos);
     }
+    public function showPhoto(Request $request, OrdenFoto $ordenFoto)
+    {
+        // Opcional: Verificación de autorización para asegurar que solo el técnico
+        // asignado a la orden de esta foto pueda verla.
+        if ($request->user()->id !== $ordenFoto->orden->technician_id) {
+            abort(403, 'No autorizado.');
+        }
+
+        // Verifica que el archivo exista en el disco 'local'
+        if (!Storage::disk('local')->exists($ordenFoto->path)) {
+            abort(404, 'Imagen no encontrada.');
+        }
+
+        // Devuelve el archivo con el tipo de contenido correcto (ej. image/jpeg)
+        return Storage::disk('local')->response($ordenFoto->path);
+    }
 }
