@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->text('fcm_token')->nullable();
+        Schema::table('ordens', function (Blueprint $table) {
+            $table->dateTime('fecha_programada')->nullable();
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
+        Schema::table('ordens', function (Blueprint $table) {
             //
         });
     }

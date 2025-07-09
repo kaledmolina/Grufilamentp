@@ -30,6 +30,7 @@ class Orden extends Model
         'observaciones_destino',
         'observaciones_generales',
         'es_programada',
+        'fecha_programada',
         'technician_id',
         'status',
     ];
@@ -43,6 +44,7 @@ class Orden extends Model
     {
         return [
             'fecha_hora' => 'datetime',
+            'fecha_programada' => 'datetime',
             'es_programada' => 'boolean',
             'valor_servicio' => 'decimal:2',
         ];

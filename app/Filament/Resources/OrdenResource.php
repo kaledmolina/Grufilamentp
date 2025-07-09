@@ -20,6 +20,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
+use Filament\Forms\Get; // <-- Importante para la lógica reactiva
 
 class OrdenResource extends Resource
 {
@@ -31,7 +32,6 @@ class OrdenResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // Mantenemos la lógica para que el técnico solo vea sus órdenes.
         if (auth()->user()->hasRole('tecnico')) {
             return parent::getEloquentQuery()->where('technician_id', auth()->id());
         }
@@ -94,8 +94,7 @@ class OrdenResource extends Resource
 
                 Section::make('Información Adicional')
                     ->schema([
-                        Textarea::make('observaciones_generales')->label('Observaciones Generales (Información adicional del valor del servicio, etc.)')->rows(4),
-                        Toggle::make('es_programada')->label('¿Es una orden programada?'),
+                        Textarea::make('observaciones_generales')->label('Observaciones Generales')->rows(4),
                         Select::make('status')
                             ->label('Estado de la Orden')
                             ->options([
@@ -107,7 +106,16 @@ class OrdenResource extends Resource
                                 'anulada' => 'Anulada',
                             ])
                             ->required()
-                            ->default('abierta'),
+                            ->default('abierta')
+                            ->live(), // <-- HACE QUE EL FORMULARIO REACCIONE A LOS CAMBIOS
+
+                        // CAMBIO: Este campo ahora es condicional
+                        DateTimePicker::make('fecha_programada')
+                            ->label('Fecha Programada')
+                            // Solo es visible si el estado es 'programada'
+                            ->visible(fn (Get $get): bool => $get('status') === 'programada')
+                            // Es requerido solo si el estado es 'programada'
+                            ->requiredIf('status', 'programada'),
                     ]),
             ]);
     }
