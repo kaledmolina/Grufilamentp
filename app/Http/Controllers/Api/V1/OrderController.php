@@ -7,6 +7,7 @@ use App\Models\Orden;
 use App\Models\User;
 use App\Models\OrdenFoto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification as FilamentNotification;
 use Filament\Notifications\Actions\Action;
 
