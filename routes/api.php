@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Models\OrdenFoto;
 
 // --- Rutas Públicas v1 ---
 // Esta ruta no necesita autenticación.
