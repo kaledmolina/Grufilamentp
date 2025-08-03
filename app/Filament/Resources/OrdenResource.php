@@ -165,11 +165,7 @@ class OrdenResource extends Resource
                         ->icon('heroicon-o-arrow-down-tray')
                         ->action(function (Orden $record) {
                             $pdf = Pdf::loadView('pdf.orden-pdf', ['orden' => $record]);
-                            
-                            // Se usa una función anónima completa para asegurar la compatibilidad
-                            return response()->streamDownload(function () use ($pdf) {
-                                echo $pdf->output();
-                            }, 'orden-'.$record->numero_orden.'.pdf');
+                            return response()->streamDownload(fn() => print($pdf->output()), 'orden-'.$record->numero_orden.'.pdf');
                         }),
                     // 👇 NUEVO BOTÓN PARA GESTIONAR FOTOS
                     Action::make('managePhotos')
