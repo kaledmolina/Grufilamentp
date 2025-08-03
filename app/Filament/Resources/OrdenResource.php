@@ -167,50 +167,6 @@ class OrdenResource extends Resource
                             $pdf = Pdf::loadView('pdf.orden-pdf', ['orden' => $record]);
                             return response()->streamDownload(fn() => print($pdf->output()), 'orden-'.$record->numero_orden.'.pdf');
                         }),
-                    // 👇 NUEVO BOTÓN PARA GESTIONAR FOTOS
-                    Action::make('managePhotos')
-                        ->label('Gestionar Fotos')
-                        ->icon('heroicon-o-camera')
-                        ->fillForm(fn (Orden $record): array => [
-                            'fotos_existentes' => $record->fotos->toArray(),
-                        ])
-                        ->form([
-                            Repeater::make('fotos_existentes')
-                                ->label('Fotos Actuales')
-                                ->schema([
-                                    FormView::make('filament.forms.components.image-preview')
-                                        ->viewData(['id' => fn (callable $get) => $get('id')]),
-                                    Hidden::make('id'),
-                                ])
-                                ->columnSpanFull()
-                                ->addable(false)
-                                ->deletable(true)
-                                ->itemLabel('Foto'),
-                            
-                            FileUpload::make('fotos_nuevas')
-                                ->label('Subir Nuevas Fotos')
-                                ->multiple()
-                                ->image()
-                                ->disk('local')
-                                ->directory('private/orden-fotos'),
-                        ])
-                        ->action(function (Orden $record, array $data): void {
-                            $idsOriginales = collect($record->fotos->pluck('id'));
-                            $idsFormulario = collect($data['fotos_existentes'])->pluck('id');
-                            $idsParaBorrar = $idsOriginales->diff($idsFormulario);
-
-                            if ($idsParaBorrar->isNotEmpty()) {
-                                OrdenFoto::whereIn('id', $idsParaBorrar)->get()->each->delete();
-                            }
-
-                            if (!empty($data['fotos_nuevas'])) {
-                                foreach ($data['fotos_nuevas'] as $fotoPath) {
-                                    $record->fotos()->create(['path' => $fotoPath]);
-                                }
-                            }
-                        })
-                        ->modalHeading('Gestionar Fotos de la Orden')
-                        ->modalSubmitActionLabel('Guardar Cambios'),
                 ]),
             ])
             ->bulkActions([
