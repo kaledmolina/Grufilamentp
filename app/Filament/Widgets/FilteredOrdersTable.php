@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Widgets;
 
 use Filament\Tables;
@@ -7,9 +8,10 @@ use Filament\Widgets\TableWidget as BaseWidget;
 use App\Models\Orden;
 use App\Models\User;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\SelectColumn; // <-- Importar para columnas editables
+use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\BadgeColumn; // <-- Se asegura que este import esté presente
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter; // <-- Importar para el nuevo filtro
+use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Database\Eloquent\Builder;
 
 class FilteredOrdersTable extends BaseWidget
@@ -44,31 +46,24 @@ class FilteredOrdersTable extends BaseWidget
             ->columns([
                 TextColumn::make('numero_orden')->label('N° Orden')->searchable(),
                 
-                // CAMBIO: Columna de Técnico ahora es un selector editable
-                SelectColumn::make('technician_id')
+                TextColumn::make('technician.name')
                     ->label('Técnico Asignado')
-                    ->options(
-                        User::whereHas('roles', fn ($query) => $query->where('name', 'tecnico'))
-                            ->pluck('name', 'id')
-                    )
                     ->searchable()
                     ->placeholder('Sin asignar'),
 
-                TextColumn::make('celular')->label('Número de Contacto'),
-                TextColumn::make('ciudad_origen')->label('Ciudad Origen'),
-                TextColumn::make('ciudad_destino')->label('Ciudad Destino'),
+                TextColumn::make('celular')->label('Número de Contacto')->placeholder('Sin asignar'),
+                TextColumn::make('ciudad_origen')->label('Ciudad Origen')->placeholder('Sin asignar'),
+                TextColumn::make('ciudad_destino')->label('Ciudad Destino')->placeholder('Sin asignar'),
 
-                // CAMBIO: Columna de Estado ahora es un selector editable
-                SelectColumn::make('status')
+                BadgeColumn::make('status')
                     ->label('Estado')
-                    ->options([
-                        'abierta' => 'Abierta',
-                        'programada' => 'Programada',
-                        'en proceso' => 'En Proceso',
-                        'cerrada' => 'Cerrada',
-                        'fallida' => 'Fallida',
-                        'anulada' => 'Anulada',
-                        'rechazada' => 'Rechazada',
+                    ->colors([
+                        'success' => 'abierta',
+                        'info'    => 'programada',
+                        'warning' => 'en proceso',
+                        'primary' => 'cerrada',
+                        'danger'  => fn ($state) => in_array($state, ['fallida', 'rechazada']),
+                        'gray'    => 'anulada',
                     ])
                     ->searchable()
                     ->sortable(),
@@ -78,9 +73,8 @@ class FilteredOrdersTable extends BaseWidget
                     ->label('Técnico')
                     ->relationship('technician', 'name', modifyQueryUsing: fn ($query) => $query->whereHas('roles', fn($q) => $q->where('name', 'tecnico'))),
                 
-                // CAMBIO: Nuevo filtro para órdenes sin técnico
                 TernaryFilter::make('sin_tecnico')
-                    ->label('Con Técnico Asignado')
+                    ->label('Sin Técnico Asignado')
                     ->nullable()
                     ->attribute('technician_id')
                     ->trueLabel('Sí')
@@ -88,3 +82,4 @@ class FilteredOrdersTable extends BaseWidget
             ]);
     }
 }
+

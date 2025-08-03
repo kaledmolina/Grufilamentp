@@ -1,12 +1,11 @@
 <?php
-// Abre el archivo app/Filament/Resources/OrdenResource.php
-// y reemplaza su contenido con este código.
 
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\OrdenResource\Pages;
 use App\Models\Orden;
 use App\Models\User;
+use App\Models\OrdenFoto;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -24,19 +23,25 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Forms\Get;
 use Filament\Tables\Actions\Action;
-use Barryvdh\DomPDF\Facade\Pdf; // <-- Importa la fachada de PDF
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Tables\Actions\ActionGroup;
-
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\View as FormView;
 
 class OrdenResource extends Resource
 {
     protected static ?string $model = Orden::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = 'Órdenes de Servicio';
     protected static ?string $modelLabel = 'Orden de Servicio';
 
-    // ... (El método form() no cambia) ...
+    protected static ?string $navigationGroup = 'Gestión de Órdenes';
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -153,22 +158,59 @@ class OrdenResource extends Resource
             ])
             ->actions([
                 ActionGroup::make([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                // 👇 BOTÓN ACTUALIZADO CON LA LÓGICA INTEGRADA
-                Action::make('downloadPdf')
-                    ->label('PDF')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->action(function (Orden $record) {
-                        // Carga la vista y genera el PDF
-                        $pdf = Pdf::loadView('pdf.orden-pdf', ['orden' => $record]);
-                        
-                        // Devuelve una respuesta de descarga directa al navegador
-                        return response()->streamDownload(function () use ($pdf) {
-                            echo $pdf->output();
-                        }, 'orden-'.$record->numero_orden.'.pdf');
-                    }),
-                    
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
+                    Action::make('downloadPdf')
+                        ->label('PDF')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->action(function (Orden $record) {
+                            $pdf = Pdf::loadView('pdf.orden-pdf', ['orden' => $record]);
+                            return response()->streamDownload(fn() => print($pdf->output()), 'orden-'.$record->numero_orden.'.pdf');
+                        }),
+                    // 👇 NUEVO BOTÓN PARA GESTIONAR FOTOS
+                    Action::make('managePhotos')
+                        ->label('Gestionar Fotos')
+                        ->icon('heroicon-o-camera')
+                        ->fillForm(fn (Orden $record): array => [
+                            'fotos_existentes' => $record->fotos->toArray(),
+                        ])
+                        ->form([
+                            Repeater::make('fotos_existentes')
+                                ->label('Fotos Actuales')
+                                ->schema([
+                                    FormView::make('filament.forms.components.image-preview')
+                                        ->viewData(['id' => fn (callable $get) => $get('id')]),
+                                    Hidden::make('id'),
+                                ])
+                                ->columnSpanFull()
+                                ->addable(false)
+                                ->deletable(true)
+                                ->itemLabel('Foto'),
+                            
+                            FileUpload::make('fotos_nuevas')
+                                ->label('Subir Nuevas Fotos')
+                                ->multiple()
+                                ->image()
+                                ->disk('local')
+                                ->directory('private/orden-fotos'),
+                        ])
+                        ->action(function (Orden $record, array $data): void {
+                            $idsOriginales = collect($record->fotos->pluck('id'));
+                            $idsFormulario = collect($data['fotos_existentes'])->pluck('id');
+                            $idsParaBorrar = $idsOriginales->diff($idsFormulario);
+
+                            if ($idsParaBorrar->isNotEmpty()) {
+                                OrdenFoto::whereIn('id', $idsParaBorrar)->get()->each->delete();
+                            }
+
+                            if (!empty($data['fotos_nuevas'])) {
+                                foreach ($data['fotos_nuevas'] as $fotoPath) {
+                                    $record->fotos()->create(['path' => $fotoPath]);
+                                }
+                            }
+                        })
+                        ->modalHeading('Gestionar Fotos de la Orden')
+                        ->modalSubmitActionLabel('Guardar Cambios'),
                 ]),
             ])
             ->bulkActions([

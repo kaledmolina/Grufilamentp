@@ -19,6 +19,9 @@ class FotoResource extends Resource
     protected static ?string $modelLabel = 'Orden';
     protected static ?string $pluralModelLabel = 'Órdenes';
 
+    protected static ?string $navigationGroup = 'Gestión de Órdenes';
+    protected static ?int $navigationSort = 2;
+
     // No se necesita un formulario principal aquí
     public static function form(\Filament\Forms\Form $form): \Filament\Forms\Form
     {
