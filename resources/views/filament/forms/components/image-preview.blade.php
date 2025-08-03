@@ -1,7 +1,7 @@
 <div>
     {{-- La variable $id ahora es pasada directamente desde el OrdenResource a través de viewData() --}}
     @if(isset($id) && $id)
-        <img src="{{ route('fotos.show', ['ordenFoto' => $id]) }}"
+        <img src="{{ route('private-fotos', ['ordenFoto' => $id]) }}"
              alt="Foto de la orden"
              class="rounded-lg shadow-md object-cover w-full h-40">
     @endif
