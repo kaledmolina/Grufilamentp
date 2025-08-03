@@ -13,12 +13,7 @@ class EditOrden extends EditRecord
 {
     protected static string $resource = OrdenResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\DeleteAction::make(),
-        ];
-    }
+    
 
     /**
      * Este método se ejecuta DESPUÉS de que se guardan los cambios en una orden.

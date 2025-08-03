@@ -1,4 +1,6 @@
 <?php
+// Abre el archivo app/Filament/Resources/OrdenResource.php
+// y reemplaza su contenido con este código.
 
 namespace App\Filament\Resources;
 
@@ -20,7 +22,11 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
-use Filament\Forms\Get; // <-- Importante para la lógica reactiva
+use Filament\Forms\Get;
+use Filament\Tables\Actions\Action;
+use Barryvdh\DomPDF\Facade\Pdf; // <-- Importa la fachada de PDF
+use Filament\Tables\Actions\ActionGroup;
+
 
 class OrdenResource extends Resource
 {
@@ -30,14 +36,7 @@ class OrdenResource extends Resource
     protected static ?string $navigationLabel = 'Órdenes de Servicio';
     protected static ?string $modelLabel = 'Orden de Servicio';
 
-    public static function getEloquentQuery(): Builder
-    {
-        if (auth()->user()->hasRole('tecnico')) {
-            return parent::getEloquentQuery()->where('technician_id', auth()->id());
-        }
-        return parent::getEloquentQuery();
-    }
-
+    // ... (El método form() no cambia) ...
     public static function form(Form $form): Form
     {
         return $form
@@ -45,34 +44,45 @@ class OrdenResource extends Resource
                 Grid::make(2)->schema([
                     Section::make('Información Principal')
                         ->schema([
-                            TextInput::make('numero_orden')->label('Número de Orden')->required()->unique(ignoreRecord: true),
+                            TextInput::make('numero_orden')
+                                ->label('Número de Orden')
+                                ->required()
+                                ->unique(ignoreRecord: true)
+                                ->default(fn () => (Orden::max('numero_orden') ?? 0) + 1),
                             TextInput::make('numero_expediente')->label('Número de Expediente'),
                             TextInput::make('nombre_cliente')->label('Nombre del Cliente')->required(),
                             DateTimePicker::make('fecha_hora')->label('Fecha y Hora')->required(),
-                            TextInput::make('valor_servicio')->label('Valor del Servicio')->numeric()->prefix('$'),
-                            TextInput::make('placa')->label('Placa'),
-                            TextInput::make('referencia')->label('Referencia'),
                         ])->columnSpan(1),
-
+                    
                     Section::make('Detalles del Servicio')
                         ->schema([
-                            TextInput::make('unidad_negocio')->label('Unidad de Negocio'),
                             TextInput::make('movimiento')->label('Movimiento'),
                             TextInput::make('servicio')->label('Servicio'),
-                            TextInput::make('modalidad')->label('Modalidad'),
-                            TextInput::make('tipo_activo')->label('Tipo de Activo'),
                             TextInput::make('marca')->label('Marca'),
                             Select::make('technician_id')
                                 ->label('Técnico Asignado')
-                                ->relationship('technician', 'name', modifyQueryUsing: fn (Builder $query) => $query->whereHas('roles', fn ($q) => $q->where('name', 'tecnico')))
+                                ->relationship(
+                                    'technician', 
+                                    'name', 
+                                    modifyQueryUsing: fn (Builder $query) => $query
+                                        ->whereHas('roles', fn ($q) => $q->where('name', 'tecnico'))
+                                        ->where('is_active', true)
+                                )
                                 ->searchable()
                                 ->preload(),
                         ])->columnSpan(1),
                 ]),
 
+                Section::make('Referencia del Servicio')
+                    ->schema([
+                        TextInput::make('valor_servicio')->label('Valor del Servicio')->numeric()->prefix('$'),
+                        TextInput::make('placa')->label('Placa'),
+                        TextInput::make('referencia')->label('Referencia')
+                    ]),
+
                 Section::make('Información de Contacto en Origen')
                     ->schema([
-                        TextInput::make('nombre_asignado')->label('Nombre del Asignado'),
+                        TextInput::make('nombre_asignado')->label('Nombre del Asegurado'),
                         TextInput::make('celular')->label('Celular')->tel(),
                     ]),
                 
@@ -107,14 +117,11 @@ class OrdenResource extends Resource
                             ])
                             ->required()
                             ->default('abierta')
-                            ->live(), // <-- HACE QUE EL FORMULARIO REACCIONE A LOS CAMBIOS
+                            ->live(),
 
-                        // CAMBIO: Este campo ahora es condicional
                         DateTimePicker::make('fecha_programada')
                             ->label('Fecha Programada')
-                            // Solo es visible si el estado es 'programada'
                             ->visible(fn (Get $get): bool => $get('status') === 'programada')
-                            // Es requerido solo si el estado es 'programada'
                             ->requiredIf('status', 'programada'),
                     ]),
             ]);
@@ -124,9 +131,13 @@ class OrdenResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('numero_orden')->label('N° Orden')->searchable()->sortable(),
-                TextColumn::make('nombre_cliente')->label('Cliente')->searchable(),
-                TextColumn::make('technician.name')->label('Técnico Asignado')->sortable(),
+                TextColumn::make('numero_orden')->label('Numero de orden')->searchable(),
+                TextColumn::make('nombre_cliente')->label('Nombre del cliente')->searchable(),
+                TextColumn::make('numero_expediente')->label('Numero de expediente')->searchable(),
+                TextColumn::make('placa')->label('Placa')->searchable(),
+                TextColumn::make('valor_servicio')->label('Valor del servicio')->money('COP')->sortable(),
+                TextColumn::make('technician.name')->label('Tecnico')->searchable(),
+                TextColumn::make('servicio')->label('Tipo de servicio')->searchable(),
                 BadgeColumn::make('status')
                     ->label('Estado')
                     ->colors([
@@ -136,14 +147,29 @@ class OrdenResource extends Resource
                         'danger' => 'fallida',
                         'gray' => 'anulada',
                     ]),
-                TextColumn::make('fecha_hora')->label('Fecha')->dateTime()->sortable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
+                ActionGroup::make([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                // 👇 BOTÓN ACTUALIZADO CON LA LÓGICA INTEGRADA
+                Action::make('downloadPdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function (Orden $record) {
+                        // Carga la vista y genera el PDF
+                        $pdf = Pdf::loadView('pdf.orden-pdf', ['orden' => $record]);
+                        
+                        // Devuelve una respuesta de descarga directa al navegador
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->output();
+                        }, 'orden-'.$record->numero_orden.'.pdf');
+                    }),
+                    
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -151,14 +177,12 @@ class OrdenResource extends Resource
                 ]),
             ]);
     }
-
+    
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
-
+    
     public static function getPages(): array
     {
         return [

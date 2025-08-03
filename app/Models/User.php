@@ -1,16 +1,18 @@
 <?php
+// Abre tu archivo de modelo app/Models/User.php
+// y reemplaza su contenido con este código.
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 use Laravel\Sanctum\HasApiTokens;
+use Filament\Models\Contracts\FilamentUser; // <-- Importar el contrato de Filament
+use Filament\Panel; // <-- Importar el Panel
 
-
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser // <-- Implementar el contrato
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
@@ -18,23 +20,23 @@ class User extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'fcm_token',
-        'telefono', // <-- Añadido
-        'direccion',// <-- Añadido
-        'vehiculo', // <-- Añadido
+        'telefono',
+        'direccion',
+        'vehiculo',
         'is_active',
+        'fcm_token',
     ];
 
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var list<string>
+     * @var array<int, string>
      */
     protected $hidden = [
         'password',
@@ -54,8 +56,16 @@ class User extends Authenticatable
             'is_active' => 'boolean',
         ];
     }
+    
     public function routeNotificationForFcm($notification = null)
     {
         return $this->fcm_token;
+    }
+
+    // 👇 MÉTODO AÑADIDO: Controla el acceso al panel de Filament.
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Solo permite el acceso a usuarios con el rol de administrador u operador.
+        return $this->hasRole(['administrador', 'operador']);
     }
 }

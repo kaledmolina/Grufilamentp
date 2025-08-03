@@ -73,7 +73,14 @@ class UserResource extends Resource
                 IconColumn::make('is_active')
                     ->label('Activo')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('fcm_token'),       
+                // CAMBIO: Se reemplaza la columna de texto por una de ícono.
+                IconColumn::make('fcm_token')
+                    ->label('Notificaciones App')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-badge')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger'),
                 TextColumn::make('created_at')
                     ->label('Creado el')
                     ->dateTime()
