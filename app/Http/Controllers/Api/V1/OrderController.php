@@ -186,8 +186,18 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        // CAMBIO: En lugar de devolver la colección directamente, la pasamos a través del Resource.
-        return OrdenFotoResource::collection($orden->fotos);
+        $fotos = $orden->fotos->map(function ($foto) {
+            return [
+                'id' => $foto->id,
+                'orden_id' => $foto->orden_id,
+                'path' => $foto->path,
+                'url' => url('/api/v1/private-fotos/' . $foto->id), // Se construye la URL correcta
+                'created_at' => $foto->created_at,
+                'updated_at' => $foto->updated_at,
+            ];
+        });
+
+        return response()->json($fotos);
     }
     public function showPhoto(Request $request, OrdenFoto $ordenFoto)
     {
