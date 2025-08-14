@@ -36,8 +36,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/orders/{orden}/update-details', [OrderController::class, 'updateDetails']); 
     Route::post('/orders/{orden}/upload-photo', [OrderController::class, 'uploadPhoto']);
     Route::get('/orders/{orden}/photos', [OrderController::class, 'getPhotos']);
-    Route::get('/private-fotos/{ordenFoto}', [OrderController::class, 'showPhoto']); 
     */ 
+    Route::get('/private-fotos/{ordenFoto}', [OrderController::class, 'showPhoto']); 
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{orden:numero_orden}', [OrderController::class, 'show']);
     Route::post('/orders/{orden:numero_orden}/accept', [OrderController::class, 'acceptOrder']);
