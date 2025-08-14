@@ -35,8 +35,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     //Rutas para fotos
     Route::post('/orders/{orden}/update-details', [OrderController::class, 'updateDetails']); 
     Route::post('/orders/{orden}/upload-photo', [OrderController::class, 'uploadPhoto']);
-    Route::get('/orders/{orden}/photos', [OrderController::class, 'getPhotos']);
     */ 
+    Route::get('/orders/{orden}/photos', [OrderController::class, 'getPhotos']);
     Route::get('/private-fotos/{ordenFoto}', [OrderController::class, 'showPhoto']); 
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{orden:numero_orden}', [OrderController::class, 'show']);
@@ -45,6 +45,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/orders/{orden:numero_orden}/reject', [OrderController::class, 'rejectOrder']);
     Route::post('/orders/{orden:numero_orden}/update-details', [OrderController::class, 'updateDetails']); 
     Route::post('/orders/{orden:numero_orden}/upload-photo', [OrderController::class, 'uploadPhoto']);
-    Route::get('/orders/{orden:numero_orden}/photos', [OrderController::class, 'getPhotos']);
+   // Route::get('/orders/{orden:numero_orden}/photos', [OrderController::class, 'getPhotos']);
 
 });
