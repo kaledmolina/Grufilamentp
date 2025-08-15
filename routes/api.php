@@ -23,6 +23,7 @@ Route::get('/v1/health', function () {
 Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
 
     Route::get('/me', [AuthController::class, 'me']);

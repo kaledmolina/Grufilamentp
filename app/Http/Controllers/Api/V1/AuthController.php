@@ -59,4 +59,9 @@ class AuthController extends Controller
         $request->user()->update(['fcm_token' => $request->fcm_token]);
         return response()->json(['message' => 'Token actualizado.']);
     }
+    public function profile(Request $request)
+    {
+        // Carga la relación 'vehicle' para incluirla en la respuesta JSON
+        return response()->json($request->user()->load('vehicle'));
+    }
 }
