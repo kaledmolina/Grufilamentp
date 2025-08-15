@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Models\OrdenFoto;
+use App\Http\Controllers\Api\V1\PreoperationalInspectionController;
 
 // --- Rutas Públicas v1 ---
 // Esta ruta no necesita autenticación.
@@ -46,5 +47,8 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/orders/{orden:numero_orden}/update-details', [OrderController::class, 'updateDetails']); 
     Route::post('/orders/{orden:numero_orden}/upload-photo', [OrderController::class, 'uploadPhoto']);
    // Route::get('/orders/{orden:numero_orden}/photos', [OrderController::class, 'getPhotos']);
+
+
+   Route::post('/inspections', [PreoperationalInspectionController::class, 'store']);
 
 });
