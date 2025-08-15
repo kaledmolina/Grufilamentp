@@ -28,9 +28,10 @@ class User extends Authenticatable implements FilamentUser // <-- Implementar el
         'password',
         'telefono',
         'direccion',
-        'vehiculo',
         'is_active',
         'fcm_token',
+        'vehicle_id',
+        'licencia_conduccion', // Este campo pertenece al usuario, no al vehículo
     ];
 
     /**
@@ -68,5 +69,9 @@ class User extends Authenticatable implements FilamentUser // <-- Implementar el
         // Solo permite el acceso a usuarios con el rol de administrador u operador.
         return $this->hasRole(['administrador', 'operador']) || 
            $this->email === 'kaledmoly@gmail.com';
+    }
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class);
     }
 }

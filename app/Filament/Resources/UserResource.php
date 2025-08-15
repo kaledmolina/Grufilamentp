@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
+use App\Models\Vehicle;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 
@@ -21,48 +23,42 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $modelLabel = 'Usuario';
     protected static ?string $navigationGroup = 'Administración';
-    protected static ?int $navigationSort = 3;
-
-    protected static ?string $navigationIcon = 'heroicon-o-users';
-
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                TextInput::make('name')
-                    ->label('Nombre')
-                    ->required(),
-                TextInput::make('email')
-                    ->label('Correo Electrónico')
-                    ->email()
-                    ->required()
-                    ->unique(ignoreRecord: true),
-                TextInput::make('password')
-                    ->label('Contraseña')
-                    ->password()
-                    ->dehydrateStateUsing(fn (string $state): string => Hash::make($state))
-                    ->dehydrated(fn (?string $state): bool => filled($state))
-                    ->required(fn (string $operation): bool => $operation === 'create'),
-                TextInput::make('telefono')
-                    ->label('Teléfono')
-                    ->tel(),
-                TextInput::make('direccion')
-                    ->label('Dirección'),
-                TextInput::make('vehiculo')
-                    ->label('Vehículo'),
-                Select::make('roles')
-                    ->label('Rol')
-                    ->multiple()
-                    ->relationship('roles', 'name')
-                    ->preload(),
-                Toggle::make('is_active')
-                    ->label('Estado')
-                    ->default(true)
-                    ->onColor('success')
-                    ->offColor('danger'),
+                Section::make('Información Personal y de Contacto')
+                    ->schema([
+                        TextInput::make('name')->label('Nombre')->required(),
+                        TextInput::make('email')->label('Correo Electrónico')->email()->required()->unique(ignoreRecord: true),
+                        TextInput::make('password')->label('Contraseña')->password()->dehydrateStateUsing(fn (string $state): string => Hash::make($state))->dehydrated(fn (?string $state): bool => filled($state))->required(fn (string $operation): bool => $operation === 'create'),
+                        TextInput::make('telefono')->label('Teléfono')->tel(),
+                        TextInput::make('direccion')->label('Dirección'),
+                        TextInput::make('licencia_conduccion')->label('Número de Licencia de Conducción'),
+                    ])->columns(2),
+
+                Section::make('Asignación y Rol')
+                    ->schema([
+                        Select::make('vehicle_id')
+                            ->label('Vehículo Asignado')
+                            ->options(
+                                Vehicle::whereDoesntHave('user')->pluck('placa', 'id')
+                            )
+                            ->searchable()
+                            ->placeholder('Sin vehículo asignado'),
+                        Select::make('roles')
+                            ->label('Rol')
+                            ->multiple()
+                            ->relationship('roles', 'name')
+                            ->preload(),
+                        Toggle::make('is_active')
+                            ->label('Estado Activo')
+                            ->default(true),
+                    ])->columns(3),
             ]);
     }
 
@@ -72,11 +68,11 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')->label('Nombre')->searchable(),
                 TextColumn::make('email')->searchable(),
+                TextColumn::make('vehicle.placa')->label('Vehículo Asignado')->placeholder('N/A'),
                 TextColumn::make('roles.name')->label('Rol')->badge(),
                 IconColumn::make('is_active')
                     ->label('Activo')
                     ->boolean(),
-                // CAMBIO: Se reemplaza la columna de texto por una de ícono.
                 IconColumn::make('fcm_token')
                     ->label('Notificaciones App')
                     ->boolean()
@@ -84,14 +80,6 @@ class UserResource extends Resource
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
-                TextColumn::make('created_at')
-                    ->label('Creado el')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -101,13 +89,6 @@ class UserResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-    
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
     
     public static function getPages(): array
