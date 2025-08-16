@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PreoperationalInspection;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class PreoperationalInspectionController extends Controller
 {
@@ -53,5 +54,18 @@ class PreoperationalInspectionController extends Controller
             'message' => 'Inspección guardada exitosamente.',
             'inspection' => $inspection
         ], 201);
+    }
+
+    public function checkToday(Request $request)
+    {
+        $user = $request->user();
+
+        $inspectionToday = PreoperationalInspection::where('user_id', $user->id)
+            ->whereDate('fecha_inspeccion', today())
+            ->exists();
+
+        return response()->json([
+            'completed_today' => $inspectionToday,
+        ]);
     }
 }

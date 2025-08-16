@@ -39,5 +39,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
 
 
    Route::post('/inspections', [PreoperationalInspectionController::class, 'store']);
+   Route::get('/inspections/check-today', [PreoperationalInspectionController::class, 'checkToday']);
 
 });
