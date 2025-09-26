@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Set;
 use Filament\Forms\Components\Select;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 
@@ -203,6 +204,16 @@ class PreoperationalInspectionResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('downloadPdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->action(function (PreoperationalInspection $record) {
+                        $pdf = Pdf::loadView('pdf.preoperational-pdf', ['inspection' => $record]);
+                        return response()->streamDownload(
+                            fn() => print($pdf->output()), 
+                            'inspeccion-'.$record->id.'.pdf'
+                        );
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

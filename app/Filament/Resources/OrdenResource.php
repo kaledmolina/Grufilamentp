@@ -22,6 +22,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Filament\Forms\Get;
+use App\Models\Vehicle;
 use Filament\Tables\Actions\Action;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Tables\Actions\ActionGroup;
@@ -54,16 +55,18 @@ class OrdenResource extends Resource
                                 ->required()
                                 ->unique(ignoreRecord: true)
                                 ->default(fn () => (Orden::max('numero_orden') ?? 0) + 1),
-                            TextInput::make('numero_expediente')->label('Número de Expediente'),
+                            
+                            TextInput::make('servicio')->label('Servicio'),                            
                             TextInput::make('nombre_cliente')->label('Nombre del Cliente')->required(),
                             DateTimePicker::make('fecha_hora')->label('Fecha y Hora')->required(),
                         ])->columnSpan(1),
                     
                     Section::make('Detalles del Servicio')
                         ->schema([
+                            TextInput::make('numero_expediente')->label('Número de Expediente'),
                             TextInput::make('movimiento')->label('Movimiento'),
-                            TextInput::make('servicio')->label('Servicio'),
-                            TextInput::make('marca')->label('Marca'),
+
+                            TextInput::make('valor_servicio')->label('Valor del Servicio')->numeric()->prefix('$'),
                             Select::make('technician_id')
                                 ->label('Técnico Asignado')
                                 ->relationship(
@@ -75,13 +78,18 @@ class OrdenResource extends Resource
                                 )
                                 ->searchable()
                                 ->preload(),
+                            Select::make('tipo_activo')
+                                ->label('Tipo de activo (Placa)')
+                                ->options(Vehicle::pluck('placa', 'placa')) // Carga las placas de los vehículos
+                                ->searchable() // Permite buscar en la lista
+                                ->required(),
                         ])->columnSpan(1),
                 ]),
 
                 Section::make('Referencia del Servicio')
                     ->schema([
-                        TextInput::make('valor_servicio')->label('Valor del Servicio')->numeric()->prefix('$'),
                         TextInput::make('placa')->label('Placa'),
+                        TextInput::make('marca')->label('Marca'),
                         TextInput::make('referencia')->label('Referencia')
                     ]),
 
