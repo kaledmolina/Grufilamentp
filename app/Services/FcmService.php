@@ -2,28 +2,82 @@
 
 namespace App\Services;
 
-use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification;
-use Illuminate\Support\Facades\Log;
-use Kreait\Laravel\Firebase\Facades\Firebase;
+use App\Models\FcmToken;
+use App\Models\User;
+use Illuminate\Support\Str;
+use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Exception\FirebaseException;
+use Kreait\Firebase\Exception\MessagingException;
+use Throwable;
 
 class FcmService
 {
-    public function send(string $token, string $title, string $body, array $data = []): void
+    public function __construct() {}
+
+    public function registerToken(User $user, string $token, ?string $deviceName = null): FcmToken
     {
-        try {
-            $messaging = Firebase::messaging();
+        return FcmToken::updateOrCreate(
+            [
+                'user_id' => $user->getKey(),
+                'token' => $token,
+            ],
+            [
+                'device_name' => $deviceName,
+            ]
+        );
+    }
 
-            $message = CloudMessage::withTarget('token', $token)
-                ->withNotification(Notification::create($title, $body))
-                ->withData($data);
+    /**
+     * @throws FirebaseException
+     */
+    public function sendToUser(User $user, array $notification, array $data = []): void
+    {
+        $tokens = $user->fcmTokens()->pluck('token')->filter()->values();
 
-            $messaging->send($message);
-
-            Log::info('Notificación FCM (v1) enviada exitosamente a ' . substr($token, 0, 20) . '...');
-
-        } catch (\Exception $e) {
-            Log::error('Error al enviar notificación con Firebase Admin SDK: ' . $e->getMessage());
+        if ($tokens->isEmpty()) {
+            return;
         }
+
+        $messaging = app(Messaging::class);
+
+        foreach ($tokens as $token) {
+            $payload = [
+                'token' => $token,
+                'notification' => $notification,
+            ];
+
+            if (! empty($data)) {
+                $normalizedData = [];
+
+                foreach ($data as $key => $value) {
+                    $normalizedData[(string) $key] = (string) $value;
+                }
+
+                $payload['data'] = $normalizedData;
+            }
+
+            try {
+                $messaging->send($payload);
+            } catch (MessagingException $exception) {
+                if ($this->shouldDeleteToken($exception)) {
+                    FcmToken::where('token', $token)->delete();
+                    continue;
+                }
+
+                throw $exception;
+            }
+        }
+    }
+
+    private function shouldDeleteToken(Throwable $exception): bool
+    {
+        $message = Str::lower($exception->getMessage());
+
+        return Str::contains($message, [
+            'requested entity was not found',
+            'notregistered',
+            'invalid registration token',
+            'registration-token-not-registered',
+        ]);
     }
 }

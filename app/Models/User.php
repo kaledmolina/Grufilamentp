@@ -29,7 +29,6 @@ class User extends Authenticatable implements FilamentUser // <-- Implementar el
         'telefono',
         'direccion',
         'is_active',
-        'fcm_token',
         'vehicle_id',
         'licencia_conduccion', // Este campo pertenece al usuario, no al vehículo
     ];
@@ -73,5 +72,10 @@ class User extends Authenticatable implements FilamentUser // <-- Implementar el
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function fcmTokens()
+    {
+        return $this->hasMany(FcmToken::class);
     }
 }
