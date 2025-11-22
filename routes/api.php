@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Models\OrdenFoto;
 use App\Http\Controllers\Api\V1\PreoperationalInspectionController;
+use App\Http\Controllers\Api\V1\FcmTokenController;
 
 // --- Rutas Públicas v1 ---
 // Esta ruta no necesita autenticación.
@@ -23,7 +24,7 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/profile', [AuthController::class, 'profile']);
-    Route::post('/update-fcm-token', [AuthController::class, 'updateFcmToken']);
+    Route::post('/update-fcm-token', [FcmTokenController::class, 'store']);
 
     Route::get('/me', [AuthController::class, 'me']);
     // Rutas para las Órdenes

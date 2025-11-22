@@ -53,12 +53,14 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Sesión cerrada exitosamente.']);
     }
+    
     public function updateFcmToken(Request $request)
     {
         $request->validate(['fcm_token' => 'required']);
         $request->user()->update(['fcm_token' => $request->fcm_token]);
         return response()->json(['message' => 'Token actualizado.']);
     }
+
     public function profile(Request $request)
     {
         // Carga la relación 'vehicle' para incluirla en la respuesta JSON a

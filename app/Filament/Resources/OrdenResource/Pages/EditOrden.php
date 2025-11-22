@@ -27,8 +27,8 @@ class EditOrden extends EditRecord
             
             $tecnico = User::find($orden->technician_id);
 
-            // Si el técnico no existe o no tiene token, notificamos al operador y salimos.
-            if (!$tecnico || !$tecnico->fcm_token) {
+            // Si el técnico no existe o no tiene tokens registrados, notificamos al operador y salimos.
+            if (!$tecnico || $tecnico->fcmTokens()->count() === 0) {
                 Notification::make()
                     ->title('Técnico sin Dispositivo Registrado')
                     ->body('Los cambios se guardaron, pero el técnico no puede recibir notificaciones push.')
@@ -38,12 +38,14 @@ class EditOrden extends EditRecord
                 return;
             }
 
-            // Si el técnico sí tiene token, preparamos y enviamos la notificación.
-            $title = '¡Orden Actualizada!';
-            $body = "Se te ha asignado la orden #{$orden->id}.";
+            // Si el técnico sí tiene tokens, preparamos y enviamos la notificación a todos sus dispositivos.
+            $notification = [
+                'title' => '¡Orden Actualizada!',
+                'body' => "Se te ha asignado la orden #{$orden->id}.",
+            ];
             $data = ['order_id' => (string)$orden->id];
 
-            app(FcmService::class)->send($tecnico->fcm_token, $title, $body, $data);
+            app(FcmService::class)->sendToUser($tecnico, $notification, $data);
         }
     }
 
