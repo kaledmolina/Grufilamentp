@@ -73,13 +73,10 @@ class UserResource extends Resource
                 IconColumn::make('is_active')
                     ->label('Activo')
                     ->boolean(),
-                IconColumn::make('fcm_token')
-                    ->label('Notificaciones App')
-                    ->boolean()
-                    ->trueIcon('heroicon-o-check-badge')
-                    ->falseIcon('heroicon-o-x-circle')
-                    ->trueColor('success')
-                    ->falseColor('danger'),
+                TextColumn::make('fcm_tokens_count')
+                    ->counts('fcmTokens')
+                    ->label('Dispositivos App')
+                    ->badge(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
