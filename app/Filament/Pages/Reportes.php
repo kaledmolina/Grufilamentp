@@ -17,6 +17,11 @@ class Reportes extends Page implements HasForms
 {
     use InteractsWithForms;
 
+    public static function canAccess(): bool
+    {
+        return ! auth()->user()->hasRole('operador');
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-document-arrow-down';
     protected static string $view = 'filament.pages.reportes';
     protected static ?string $navigationLabel = 'Reportes';

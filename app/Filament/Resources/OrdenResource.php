@@ -66,7 +66,12 @@ class OrdenResource extends Resource
                             TextInput::make('numero_expediente')->label('Número de Expediente'),
                             TextInput::make('movimiento')->label('Movimiento'),
 
-                            TextInput::make('valor_servicio')->label('Valor del Servicio')->numeric()->prefix('$'),
+                            TextInput::make('valor_servicio')
+                                ->label('Valor del Servicio')
+                                ->numeric()
+                                ->prefix('$')
+                                ->disabled(fn () => auth()->user()->hasRole('operador'))
+                                ->dehydrated(),
                             Select::make('technician_id')
                                 ->label('Técnico Asignado')
                                 ->relationship(
