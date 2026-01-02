@@ -166,6 +166,7 @@ class OrdenResource extends Resource
                         'gray' => 'anulada',
                     ]),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

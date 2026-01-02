@@ -59,6 +59,7 @@ class VehicleResource extends Resource
                 TextColumn::make('modelo')->label('Modelo')->searchable(),
                 TextColumn::make('user.name')->label('Asignado a')->placeholder('Sin asignar'),
             ])
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])

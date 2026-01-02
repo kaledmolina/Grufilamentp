@@ -198,6 +198,7 @@ class PreoperationalInspectionResource extends Resource
                 TextColumn::make('vehicle.placa')->label('Placa')->searchable(),
                 TextColumn::make('kilometraje_actual')->numeric(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

@@ -45,6 +45,7 @@ class FotoResource extends Resource
                         default => 'gray',
                     }),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 Filter::make('sin_fotos')
                     ->label('Órdenes sin Fotos')

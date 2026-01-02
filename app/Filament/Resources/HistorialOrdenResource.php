@@ -44,6 +44,7 @@ class HistorialOrdenResource extends Resource
                         'gray' => 'anulada',
                     ]),
             ])
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 Action::make('ver_historial')
                     ->label('Ver Historial')

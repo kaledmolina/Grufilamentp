@@ -78,6 +78,7 @@ class UserResource extends Resource
                     ->label('Dispositivos App')
                     ->badge(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
