@@ -23,6 +23,11 @@ class HistorialOrdenResource extends Resource
     protected static ?string $navigationGroup = 'Gestión de Órdenes';
     protected static ?int $navigationSort = 2;
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->hasRole('administrador');
+    }
+
     public static function table(Table $table): Table
     {
         return $table
