@@ -70,7 +70,7 @@ class OrdenResource extends Resource
                                 ->label('Valor del Servicio')
                                 ->numeric()
                                 ->prefix('$')
-                                ->disabled(fn () => auth()->user()->hasRole('operador'))
+                                ->disabled(fn (string $operation) => $operation === 'edit' && ! auth()->user()->hasRole('administrador'))
                                 ->dehydrated(),
                             Select::make('technician_id')
                                 ->label('Técnico Asignado')
