@@ -63,4 +63,34 @@ class Orden extends Model
     {
         return 'numero_orden';
     }
+
+    public function logs()
+    {
+        return $this->hasMany(OrderLog::class);
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($orden) {
+            $orden->logs()->create([
+                'user_id' => auth()->id(),
+                'action' => 'created',
+                'description' => json_encode(['message' => 'Orden creada']),
+            ]);
+        });
+
+        static::updated(function ($orden) {
+            $changes = $orden->getChanges();
+            // Ignore timestamps
+            unset($changes['updated_at']);
+            
+            if (!empty($changes)) {
+                $orden->logs()->create([
+                    'user_id' => auth()->id(),
+                    'action' => 'updated',
+                    'description' => json_encode($changes),
+                ]);
+            }
+        });
+    }
 }
