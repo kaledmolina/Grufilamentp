@@ -25,7 +25,7 @@ class OrdenesExport implements FromQuery, WithHeadings, WithMapping
     {
         return Orden::query()
             // CAMBIO: Precarga la relación con el técnico y las fotos para optimizar
-            ->with(['technician', 'fotos']) 
+            ->with(['technician', 'fotos', 'logs.user']) 
             ->whereBetween('fecha_hora', [$this->startDate, $this->endDate]);
     }
 
@@ -61,7 +61,8 @@ class OrdenesExport implements FromQuery, WithHeadings, WithMapping
             'Es Programada',
             'Fecha Programada',
             'Estado',
-            'Ubicación Fotos', // <-- CAMPO AÑADIDO
+            'Ubicación Fotos',
+            'Creado Por', // <-- CAMPO AÑADIDO
         ];
     }
 
@@ -103,7 +104,8 @@ class OrdenesExport implements FromQuery, WithHeadings, WithMapping
             $orden->es_programada ? 'Sí' : 'No',
             $orden->fecha_programada ? $orden->fecha_programada->format('Y-m-d H:i:s') : 'N/A',
             $orden->status,
-            $photoPaths, // <-- CAMPO AÑADIDO
+            $photoPaths,
+            $orden->logs->firstWhere('action', 'created')?->user->name ?? 'Desconocido', // Obtenemos el creador
         ];
     }
 }
