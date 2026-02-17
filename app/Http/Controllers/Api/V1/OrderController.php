@@ -66,7 +66,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Ya tienes una orden en proceso. Debes completarla antes de tomar otra.'], 422);
         }
 
-        if ($orden->status !== 'abierta') {
+        if (!in_array($orden->status, ['abierta', 'programada'])) {
             return response()->json(['message' => 'Esta orden ya no se puede procesar.'], 422);
         }
 
@@ -114,7 +114,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        if ($orden->status !== 'abierta') {
+        if (!in_array($orden->status, ['abierta', 'programada'])) {
             return response()->json(['message' => 'Esta orden ya no se puede rechazar.'], 422);
         }
 
