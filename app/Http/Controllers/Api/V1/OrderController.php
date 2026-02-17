@@ -20,7 +20,7 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
+
         // Empezamos la consulta
         $query = Orden::where('technician_id', $user->id);
 
@@ -58,9 +58,18 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado para modificar esta orden.'], 403);
         }
 
+        // Idempotency check: If already in process by this user, return success
+        if ($orden->status === 'en proceso') {
+            return response()->json([
+                'message' => 'Orden ya estaba en proceso.',
+                'order' => $orden
+            ]);
+        }
+
         $hasActiveOrder = Orden::where('technician_id', $user->id)
-                                ->where('status', 'en proceso')
-                                ->exists();
+            ->where('status', 'en proceso')
+            ->where('id', '!=', $orden->id) // Exclude current order
+            ->exists();
 
         if ($hasActiveOrder) {
             return response()->json(['message' => 'Ya tienes una orden en proceso. Debes completarla antes de tomar otra.'], 422);
@@ -90,6 +99,14 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado para modificar esta orden.'], 403);
         }
 
+        // Idempotency check: If already closed, return success
+        if ($orden->status === 'cerrada') {
+            return response()->json([
+                'message' => 'Orden ya estaba cerrada.',
+                'order' => $orden
+            ]);
+        }
+
         if ($orden->status !== 'en proceso') {
             return response()->json(['message' => 'Esta orden no se puede cerrar en su estado actual.'], 422);
         }
@@ -102,7 +119,7 @@ class OrderController extends Controller
             'order' => $orden
         ]);
     }
-    
+
     /**
      * Permite al técnico rechazar una orden y notifica directamente a los administradores/operadores.
      */
@@ -124,7 +141,7 @@ class OrderController extends Controller
         $orden->save();
 
         // --- Lógica de Notificación Directa ---
-        
+
         $recipients = User::role(['administrador', 'operador'])->get();
 
         $notification = FilamentNotification::make()
@@ -141,7 +158,7 @@ class OrderController extends Controller
         foreach ($recipients as $recipient) {
             $notification->sendToDatabase($recipient);
         }
-        
+
         return response()->json(['message' => 'Orden rechazada correctamente.']);
     }
     public function updateDetails(Request $request, Orden $orden)
