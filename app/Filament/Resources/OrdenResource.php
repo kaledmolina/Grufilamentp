@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -54,13 +55,13 @@ class OrdenResource extends Resource
                                 ->label('Número de Orden')
                                 ->required()
                                 ->unique(ignoreRecord: true)
-                                ->default(fn () => (Orden::max('numero_orden') ?? 0) + 1),
-                            
-                            TextInput::make('servicio')->label('Servicio'),                            
+                                ->default(fn() => (Orden::query()->selectRaw('MAX(CAST(numero_orden AS UNSIGNED)) as max_orden')->value('max_orden') ?? 0) + 1),
+
+                            TextInput::make('servicio')->label('Servicio'),
                             TextInput::make('nombre_cliente')->label('Nombre del Cliente')->required(),
                             DateTimePicker::make('fecha_hora')->label('Fecha y Hora')->required(),
                         ])->columnSpan(1),
-                    
+
                     Section::make('Detalles del Servicio')
                         ->schema([
                             TextInput::make('numero_expediente')->label('Número de Expediente'),
@@ -70,15 +71,15 @@ class OrdenResource extends Resource
                                 ->label('Valor del Servicio')
                                 ->numeric()
                                 ->prefix('$')
-                                ->disabled(fn (string $operation) => $operation === 'edit' && ! auth()->user()->hasRole('administrador'))
+                                ->disabled(fn(string $operation) => $operation === 'edit' && !auth()->user()->hasRole('administrador'))
                                 ->dehydrated(),
                             Select::make('technician_id')
                                 ->label('Técnico Asignado')
                                 ->relationship(
-                                    'technician', 
-                                    'name', 
-                                    modifyQueryUsing: fn (Builder $query) => $query
-                                        ->whereHas('roles', fn ($q) => $q->where('name', 'tecnico'))
+                                    'technician',
+                                    'name',
+                                    modifyQueryUsing: fn(Builder $query) => $query
+                                        ->whereHas('roles', fn($q) => $q->where('name', 'tecnico'))
                                         ->where('is_active', true)
                                 )
                                 ->searchable()
@@ -103,7 +104,7 @@ class OrdenResource extends Resource
                         TextInput::make('nombre_asignado')->label('Nombre del Asegurado'),
                         TextInput::make('celular')->label('Celular')->tel(),
                     ]),
-                
+
                 Grid::make(2)->schema([
                     Section::make('Origen')
                         ->schema([
@@ -139,7 +140,7 @@ class OrdenResource extends Resource
 
                         DateTimePicker::make('fecha_programada')
                             ->label('Fecha Programada')
-                            ->visible(fn (Get $get): bool => $get('status') === 'programada')
+                            ->visible(fn(Get $get): bool => $get('status') === 'programada')
                             ->requiredIf('status', 'programada'),
                     ]),
             ]);
@@ -179,7 +180,7 @@ class OrdenResource extends Resource
                         ->icon('heroicon-o-arrow-down-tray')
                         ->action(function (Orden $record) {
                             $pdf = Pdf::loadView('pdf.orden-pdf', ['orden' => $record]);
-                            return response()->streamDownload(fn() => print($pdf->output()), 'orden-'.$record->numero_orden.'.pdf');
+                            return response()->streamDownload(fn() => print ($pdf->output()), 'orden-' . $record->numero_orden . '.pdf');
                         }),
                 ]),
             ])
@@ -189,12 +190,12 @@ class OrdenResource extends Resource
                 ]),
             ]);
     }
-    
+
     public static function getRelations(): array
     {
         return [];
     }
-    
+
     public static function getPages(): array
     {
         return [
