@@ -152,11 +152,11 @@ class OrdenResource extends Resource
             ->columns([
                 TextColumn::make('numero_orden')->label('Numero de orden')->searchable(),
                 TextColumn::make('nombre_cliente')->label('Nombre del cliente')->searchable(),
-                TextColumn::make('numero_expediente')->label('Numero de expediente')->searchable(),
+                TextColumn::make('numero_expediente')->label('Numero de expediente')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('placa')->label('Placa')->searchable(),
-                TextColumn::make('valor_servicio')->label('Valor del servicio')->money('COP')->sortable(),
+                TextColumn::make('valor_servicio')->label('Valor del servicio')->money('COP')->sortable()->toggleable(),
                 TextColumn::make('technician.name')->label('Tecnico')->searchable(),
-                TextColumn::make('servicio')->label('Tipo de servicio')->searchable(),
+                TextColumn::make('servicio')->label('Tipo de servicio')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 BadgeColumn::make('status')
                     ->label('Estado')
                     ->colors([
@@ -166,10 +166,58 @@ class OrdenResource extends Resource
                         'danger' => 'fallida',
                         'gray' => 'anulada',
                     ]),
+                TextColumn::make('created_at')->label('Fecha Creación')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('technician_id')
+                    ->label('Técnico')
+                    ->relationship('technician', 'name', fn(Builder $query) => $query->whereHas('roles', fn($q) => $q->where('name', 'tecnico'))->where('is_active', true)),
+                
+                Tables\Filters\SelectFilter::make('nombre_cliente')
+                    ->label('Cliente')
+                    ->options(fn() => Orden::select('nombre_cliente')->distinct()->pluck('nombre_cliente', 'nombre_cliente')->toArray())
+                    ->searchable(),
+
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Estado')
+                    ->options([
+                        'abierta' => 'Abierta',
+                        'programada' => 'Programada',
+                        'en proceso' => 'En Proceso',
+                        'cerrada' => 'Cerrada',
+                        'fallida' => 'Fallida',
+                        'anulada' => 'Anulada',
+                    ]),
+
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')->label('Creado Desde'),
+                        Forms\Components\DatePicker::make('created_until')->label('Creado Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = Tables\Filters\Indicator::make('Desde ' . \Carbon\Carbon::parse($data['created_from'])->toFormattedDateString())
+                                ->removeField('created_from');
+                        }
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = Tables\Filters\Indicator::make('Hasta ' . \Carbon\Carbon::parse($data['created_until'])->toFormattedDateString())
+                                ->removeField('created_until');
+                        }
+                        return $indicators;
+                    }),
             ])
             ->actions([
                 ActionGroup::make([
