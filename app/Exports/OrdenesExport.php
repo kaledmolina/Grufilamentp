@@ -6,16 +6,21 @@ use App\Models\Orden;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrdenesExport implements FromQuery, WithHeadings, WithMapping
 {
     protected $startDate;
     protected $endDate;
+    protected $technicianId;
+    protected $nombreCliente;
 
-    public function __construct($startDate, $endDate)
+    public function __construct($startDate, $endDate, $technicianId = null, $nombreCliente = null)
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
+        $this->technicianId = $technicianId;
+        $this->nombreCliente = $nombreCliente;
     }
 
     /**
@@ -23,10 +28,21 @@ class OrdenesExport implements FromQuery, WithHeadings, WithMapping
      */
     public function query()
     {
-        return Orden::query()
+        $query = Orden::query()
             // CAMBIO: Precarga la relación con el técnico y las fotos para optimizar
             ->with(['technician', 'fotos', 'logs.user']) 
-            ->whereBetween('fecha_hora', [$this->startDate, $this->endDate]);
+            ->whereDate('created_at', '>=', $this->startDate)
+            ->whereDate('created_at', '<=', $this->endDate);
+
+        if ($this->technicianId) {
+            $query->where('technician_id', $this->technicianId);
+        }
+
+        if ($this->nombreCliente) {
+            $query->where('nombre_cliente', $this->nombreCliente);
+        }
+
+        return $query;
     }
 
     /**

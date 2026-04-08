@@ -1,17 +1,17 @@
 <?php
-// Abre el archivo app/Filament/Pages/Reportes.php
-// y reemplaza su contenido con este código.
 
 namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\OrdenesExport;
-use Filament\Actions\Action;
+use App\Models\User;
+use App\Models\Orden;
 
 class Reportes extends Page implements HasForms
 {
@@ -49,6 +49,16 @@ class Reportes extends Page implements HasForms
                 DatePicker::make('fecha_fin')
                     ->label('Fecha de Fin')
                     ->required(),
+                Select::make('technician_id')
+                    ->label('Técnico Asignado')
+                    ->options(User::whereHas('roles', fn($q) => $q->where('name', 'tecnico'))->pluck('name', 'id'))
+                    ->searchable()
+                    ->placeholder('Todos los técnicos (Opcional)'),
+                Select::make('nombre_cliente')
+                    ->label('Cliente')
+                    ->options(Orden::select('nombre_cliente')->distinct()->pluck('nombre_cliente', 'nombre_cliente'))
+                    ->searchable()
+                    ->placeholder('Todos los clientes (Opcional)'),
             ])
             ->statePath('data');
     }
@@ -59,10 +69,12 @@ class Reportes extends Page implements HasForms
         $data = $this->form->getState();
         $startDate = $data['fecha_inicio'];
         $endDate = $data['fecha_fin'];
+        $technicianId = $data['technician_id'] ?? null;
+        $nombreCliente = $data['nombre_cliente'] ?? null;
         
         $fileName = "reporte-ordenes-{$startDate}-a-{$endDate}.xlsx";
 
         // Llama a la clase de exportación y descarga el archivo
-        return Excel::download(new OrdenesExport($startDate, $endDate), $fileName);
+        return Excel::download(new OrdenesExport($startDate, $endDate, $technicianId, $nombreCliente), $fileName);
     }
 }
