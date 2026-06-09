@@ -152,11 +152,11 @@ class OrdenResource extends Resource
             ->columns([
                 TextColumn::make('numero_orden')->label('Numero de orden')->searchable(),
                 TextColumn::make('nombre_cliente')->label('Nombre del cliente')->searchable(),
-                TextColumn::make('numero_expediente')->label('Numero de expediente')->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('numero_expediente')->label('Numero de expediente')->searchable()->toggleable(),
                 TextColumn::make('placa')->label('Placa')->searchable(),
                 TextColumn::make('valor_servicio')->label('Valor del servicio')->money('COP')->sortable()->toggleable(),
-                TextColumn::make('technician.name')->label('Tecnico')->searchable(),
-                TextColumn::make('servicio')->label('Tipo de servicio')->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('technician.name')->label('tecnico')->searchable()->toggleable(),
+                TextColumn::make('servicio')->label('tipo de servicio')->searchable()->toggleable(),
                 BadgeColumn::make('status')
                     ->label('Estado')
                     ->colors([
@@ -166,7 +166,6 @@ class OrdenResource extends Resource
                         'danger' => 'fallida',
                         'gray' => 'anulada',
                     ]),
-                TextColumn::make('created_at')->label('Fecha Creación')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
