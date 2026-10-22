@@ -17,4 +17,9 @@ Route::get('/orden/{orden}/pdf', [PdfController::class, 'downloadOrdenPdf'])
     ->name('orden.pdf.download');
 Route::get('/inspections/{inspection}/pdf', [PdfController::class, 'downloadInspectionPdf'])
     ->middleware('auth')
-    ->name('inspections.pdf.download');    
+    ->name('inspections.pdf.download');
+
+// Prevenir error 405 si un navegador intenta hacer GET a livewire/update
+Route::get('/livewire/update', function () {
+    return redirect()->to('/admin');
+});    

@@ -2,7 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use Filament\Http\Responses\Auth\LoginResponse;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
+use App\Http\Responses\LoginResponse;
 use Illuminate\Http\RedirectResponse;
 
 use Filament\Http\Middleware\Authenticate;
@@ -26,23 +27,9 @@ class AdminPanelProvider extends PanelProvider
 {   
     public function register(): void
     {
-        parent::register(); // No borres esta línea
+        parent::register();
 
-        $this->app->bind(LoginResponse::class, function () {
-            // Revisa el rol del usuario autenticado
-            $user = auth()->user();
-
-            // Si es cliente o técnico, redirige a la lista de órdenes
-            if ($user->hasRole(['cliente', 'tecnico'])) {
-                // Asegúrate que el nombre de la ruta sea el correcto para tu panel
-                $url = route('filament.admin.resources.ordens.index');
-                return new LoginResponse(redirect()->to($url));
-            }
-
-            // Para cualquier otro rol (admin, operador), redirige al dashboard principal
-            $url = route('filament.admin.pages.dashboard');
-            return new LoginResponse(redirect()->intended($url));
-        });
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
     }
     public function panel(Panel $panel): Panel
     {
