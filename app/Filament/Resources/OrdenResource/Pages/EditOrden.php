@@ -3,17 +3,15 @@
 namespace App\Filament\Resources\OrdenResource\Pages;
 
 use App\Filament\Resources\OrdenResource;
-use Filament\Actions;
-use Filament\Resources\Pages\EditRecord;
-use App\Services\FcmService; // Importa el servicio
 use App\Models\User;
-use Filament\Notifications\Notification; // Importa las notificaciones de Filament
+use App\Services\FcmService;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\EditRecord;
+use Illuminate\Support\Facades\Log;
 
 class EditOrden extends EditRecord
 {
     protected static string $resource = OrdenResource::class;
-
-    
 
     /**
      * Este método se ejecuta DESPUÉS de que se guardan los cambios en una orden.
@@ -23,29 +21,39 @@ class EditOrden extends EditRecord
         $orden = $this->record;
 
         // Verificamos si el campo 'technician_id' fue el que cambió.
-        if ($orden->wasChanged('technician_id') && !is_null($orden->technician_id)) {
-            
+        if ($orden->wasChanged('technician_id') && ! is_null($orden->technician_id)) {
+
             $tecnico = User::find($orden->technician_id);
 
-            // Si el técnico no existe o no tiene tokens registrados, notificamos al operador y salimos.
-            if (!$tecnico || $tecnico->fcmTokens()->count() === 0) {
+            // Si el técnico no existe o no tiene tokens registrados
+            if (! $tecnico || $tecnico->fcmTokens()->count() === 0) {
                 Notification::make()
-                    ->title('Técnico sin Dispositivo Registrado')
-                    ->body('Los cambios se guardaron, pero el técnico no puede recibir notificaciones push.')
+                    ->title('Notificación no enviada al dispositivo')
                     ->warning()
-                    ->persistent()
                     ->send();
+
                 return;
             }
 
-            // Si el técnico sí tiene tokens, preparamos y enviamos la notificación a todos sus dispositivos.
             $notification = [
                 'title' => '¡Orden Actualizada!',
                 'body' => "Se te ha asignado la orden #{$orden->id}.",
             ];
-            $data = ['order_id' => (string)$orden->id];
+            $data = ['order_id' => (string) $orden->id];
 
-            app(FcmService::class)->sendToUser($tecnico, $notification, $data);
+            $enviado = false;
+            try {
+                $enviado = app(FcmService::class)->sendToUser($tecnico, $notification, $data);
+            } catch (\Throwable $e) {
+                Log::error('Error enviando push en EditOrden: ' . $e->getMessage());
+            }
+
+            if (! $enviado) {
+                Notification::make()
+                    ->title('Notificación no enviada al dispositivo')
+                    ->warning()
+                    ->send();
+            }
         }
     }
 

@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\FcmToken;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Exception\FirebaseException;
+use Kreait\Firebase\Exception\Messaging\NotFound;
 use Kreait\Firebase\Exception\MessagingException;
 use Throwable;
 
@@ -30,15 +32,16 @@ class FcmService
     /**
      * @throws FirebaseException
      */
-    public function sendToUser(User $user, array $notification, array $data = []): void
+    public function sendToUser(User $user, array $notification, array $data = []): bool
     {
         $tokens = $user->fcmTokens()->pluck('token')->filter()->values();
 
         if ($tokens->isEmpty()) {
-            return;
+            return false;
         }
 
         $messaging = app(Messaging::class);
+        $sentCount = 0;
 
         foreach ($tokens as $token) {
             $payload = [
@@ -58,26 +61,47 @@ class FcmService
 
             try {
                 $messaging->send($payload);
+                $sentCount++;
             } catch (MessagingException $exception) {
                 if ($this->shouldDeleteToken($exception)) {
                     FcmToken::where('token', $token)->delete();
+                    Log::info("Token FCM inactivo/desregistrado eliminado automáticamente: {$token}");
                     continue;
                 }
 
-                throw $exception;
+                Log::warning("Error al enviar notificación FCM: " . $exception->getMessage(), [
+                    'token' => $token,
+                    'user_id' => $user->getKey(),
+                ]);
+            } catch (Throwable $exception) {
+                Log::error("Error inesperado en servicio FCM: " . $exception->getMessage(), [
+                    'token' => $token,
+                    'user_id' => $user->getKey(),
+                ]);
             }
         }
+
+        return $sentCount > 0;
     }
 
     private function shouldDeleteToken(Throwable $exception): bool
     {
+        if ($exception instanceof NotFound) {
+            return true;
+        }
+
         $message = Str::lower($exception->getMessage());
 
         return Str::contains($message, [
-            'requested entity was not found',
+            'device unregistered',
+            'unregistered',
             'notregistered',
+            'not registered',
+            'requested entity was not found',
+            'not found',
             'invalid registration token',
             'registration-token-not-registered',
+            'mismatch',
         ]);
     }
 }
